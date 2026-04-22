@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+env/
+
+# Build outputs and generated app artifacts
+dist/
+dist-ssr/
+.output/
+.vinxi/
+.nitro/
+.tanstack/
+.wrangler/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+.dev.vars
+
+# Python caches and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Runtime data and model artifacts
+data/runtime/*.jsonl
+data/models/*.pkl
+data/vectors/
+data/cache/
+**/data/runtime/*.jsonl
+**/data/models/*.pkl
+**/data/vectors/
+**/data/cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

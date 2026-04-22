@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+data/runtime/*.jsonl
+data/models/*.pkl
+data/vectors/
+data/cache/
+*.log
+.DS_Store
