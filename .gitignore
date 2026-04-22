@@ -37,6 +37,9 @@ data/cache/
 **/data/vectors/
 **/data/cache/
 **/data/incoming/
+**/storage/runtime/*.jsonl
+**/storage/kb/faiss_index/*
+!**/storage/kb/faiss_index/.gitkeep
 
 # Logs
 logs/

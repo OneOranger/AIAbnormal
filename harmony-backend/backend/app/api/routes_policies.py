@@ -34,10 +34,12 @@ async def toggle_policy(policy_id: str, req: ToggleReq):
 
 
 @router.get("/feedback", response_model=List[FeedbackRecord])
-async def list_feedback(type: Optional[str] = None):
+async def list_feedback(type: Optional[str] = None, reviewer: Optional[str] = None):
     items = feedback_repo.list_all()
     if type and type != "all":
         items = [f for f in items if f.feedbackType == type]
+    if reviewer and reviewer != "all":
+        items = [f for f in items if reviewer.lower() in f.reviewer.lower()]
     return items
 
 

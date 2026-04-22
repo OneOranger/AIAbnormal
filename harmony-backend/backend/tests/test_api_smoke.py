@@ -60,3 +60,22 @@ def test_ingest_minimal_payment_event():
     data = r.json()
     assert data["ok"] is True
     assert data["orderNo"] == "PAY-TEST-INGEST-001"
+
+
+def test_storage_layout_status():
+    r = client.get("/system/storage")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["ok"] is True
+    assert data["seeds"]["orders.json"] >= 1000
+    assert data["seeds"]["recon.json"] >= 400
+    assert data["seedDir"].endswith("storage\\seeds") or data["seedDir"].endswith("storage/seeds")
+
+
+def test_feedback_reviewer_filter():
+    all_feedback = client.get("/feedback").json()
+    assert all_feedback
+    reviewer = all_feedback[0]["reviewer"]
+    r = client.get("/feedback", params={"reviewer": reviewer})
+    assert r.status_code == 200
+    assert all(item["reviewer"] == reviewer for item in r.json())

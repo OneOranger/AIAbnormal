@@ -8,6 +8,8 @@ from app.pipeline import process_order
 from app.ml.monitoring.perf_tracker import get_pipeline_tracker
 from app.ml.serving.model_registry import list_serving_models
 from app.storage import runtime_log
+from app.config import settings
+from app.storage.jsonl_store import read_json_array, iter_records
 
 router = APIRouter()
 
@@ -179,3 +181,29 @@ async def recent_inferences(n: int = 50):
 @router.get("/system/actions")
 async def recent_actions(n: int = 50):
     return {"items": runtime_log.recent_actions(n)}
+
+
+@router.get("/system/storage")
+async def storage_status():
+    """Inspect local seed/runtime storage layout for no-database testing."""
+    seed_counts = {}
+    for path in sorted(settings.seed_path.glob("*.json")):
+        try:
+            seed_counts[path.name] = len(read_json_array(path))
+        except Exception as exc:
+            seed_counts[path.name] = f"error: {exc}"
+
+    runtime_counts = {}
+    for path in sorted(settings.runtime_path.glob("*.jsonl")):
+        runtime_counts[path.name] = sum(1 for _ in iter_records(path))
+
+    return {
+        "ok": True,
+        "storageDir": str(settings.storage_path),
+        "seedDir": str(settings.seed_path),
+        "runtimeDir": str(settings.runtime_path),
+        "kbDir": str(settings.kb_path),
+        "faissIndexDir": str(settings.vectors_path),
+        "seeds": seed_counts,
+        "runtime": runtime_counts,
+    }

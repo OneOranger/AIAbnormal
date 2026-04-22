@@ -1,0 +1,636 @@
+[
+  {
+    "id": "agent-supervisor",
+    "name": "Supervisor 总调度",
+    "description": "针对 fraud 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "deepseek-v3",
+    "model": "deepseek-chat",
+    "temperature": 0.25,
+    "topP": 0.95,
+    "maxTokens": 4096,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 60,
+    "triggerCategories": [
+      "fraud"
+    ],
+    "enableMultimodal": true,
+    "enableCausalGraph": true,
+    "enableRAG": true,
+    "ragTopK": 5,
+    "ragKnowledgeBases": [
+      "kb-1"
+    ],
+    "tools": [
+      {
+        "name": "generateRule",
+        "description": "生成 DSL 风控规则建议",
+        "enabled": true,
+        "callCount24h": 2359
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": true,
+        "callCount24h": 3671
+      },
+      {
+        "name": "ragSearch",
+        "description": "RAG 检索知识库",
+        "enabled": true,
+        "callCount24h": 4461
+      }
+    ],
+    "systemPrompt": "你是「Supervisor 总调度」,负责对支付订单的 fraud 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 1355,
+    "avgLatencyMs": 1068,
+    "avgTokens": 1186,
+    "costUSD24h": 6.49,
+    "hallucinationRate": 0.0368
+  },
+  {
+    "id": "agent-triage",
+    "name": "Triage 分诊 Agent",
+    "description": "针对 fraud 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "qwen-max",
+    "model": "qwen-max-2024",
+    "temperature": 0.19,
+    "topP": 0.93,
+    "maxTokens": 4096,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 60,
+    "triggerCategories": [
+      "fraud"
+    ],
+    "enableMultimodal": false,
+    "enableCausalGraph": true,
+    "enableRAG": true,
+    "ragTopK": 5,
+    "ragKnowledgeBases": [
+      "kb-1"
+    ],
+    "tools": [
+      {
+        "name": "queryGraph",
+        "description": "查询团伙关联图谱",
+        "enabled": true,
+        "callCount24h": 3514
+      },
+      {
+        "name": "checkBlacklist",
+        "description": "查询黑名单 / OFAC",
+        "enabled": true,
+        "callCount24h": 3477
+      },
+      {
+        "name": "ragSearch",
+        "description": "RAG 检索知识库",
+        "enabled": true,
+        "callCount24h": 4491
+      },
+      {
+        "name": "generateRule",
+        "description": "生成 DSL 风控规则建议",
+        "enabled": true,
+        "callCount24h": 504
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": true,
+        "callCount24h": 742
+      },
+      {
+        "name": "sendNotification",
+        "description": "推送 IM/邮件通知",
+        "enabled": false,
+        "callCount24h": 2511
+      }
+    ],
+    "systemPrompt": "你是「Triage 分诊 Agent」,负责对支付订单的 fraud 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 3253,
+    "avgLatencyMs": 1102,
+    "avgTokens": 1024,
+    "costUSD24h": 35.12,
+    "hallucinationRate": 0.0312
+  },
+  {
+    "id": "agent-knowledge",
+    "name": "Knowledge 知识管家",
+    "description": "针对 fraud 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "qwen-max",
+    "model": "bge-large-zh",
+    "temperature": 0.34,
+    "topP": 0.93,
+    "maxTokens": 2048,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 65,
+    "triggerCategories": [
+      "fraud"
+    ],
+    "enableMultimodal": true,
+    "enableCausalGraph": true,
+    "enableRAG": true,
+    "ragTopK": 5,
+    "ragKnowledgeBases": [
+      "kb-3"
+    ],
+    "tools": [
+      {
+        "name": "queryGraph",
+        "description": "查询团伙关联图谱",
+        "enabled": true,
+        "callCount24h": 1599
+      },
+      {
+        "name": "sendNotification",
+        "description": "推送 IM/邮件通知",
+        "enabled": true,
+        "callCount24h": 2838
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": true,
+        "callCount24h": 208
+      },
+      {
+        "name": "checkBlacklist",
+        "description": "查询黑名单 / OFAC",
+        "enabled": true,
+        "callCount24h": 267
+      },
+      {
+        "name": "ragSearch",
+        "description": "RAG 检索知识库",
+        "enabled": true,
+        "callCount24h": 3081
+      }
+    ],
+    "systemPrompt": "你是「Knowledge 知识管家」,负责对支付订单的 fraud 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 1990,
+    "avgLatencyMs": 1201,
+    "avgTokens": 1054,
+    "costUSD24h": 29.32,
+    "hallucinationRate": 0.0137
+  },
+  {
+    "id": "agent-fraud",
+    "name": "Fraud 欺诈深度分析",
+    "description": "针对 fraud 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "qwen-max",
+    "model": "qwen-max-2024",
+    "temperature": 0.15,
+    "topP": 0.88,
+    "maxTokens": 2048,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 60,
+    "triggerCategories": [
+      "fraud"
+    ],
+    "enableMultimodal": true,
+    "enableCausalGraph": true,
+    "enableRAG": true,
+    "ragTopK": 3,
+    "ragKnowledgeBases": [
+      "kb-1"
+    ],
+    "tools": [
+      {
+        "name": "generateRule",
+        "description": "生成 DSL 风控规则建议",
+        "enabled": true,
+        "callCount24h": 1904
+      },
+      {
+        "name": "ragSearch",
+        "description": "RAG 检索知识库",
+        "enabled": false,
+        "callCount24h": 2990
+      },
+      {
+        "name": "sendNotification",
+        "description": "推送 IM/邮件通知",
+        "enabled": false,
+        "callCount24h": 4220
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": true,
+        "callCount24h": 730
+      },
+      {
+        "name": "queryGraph",
+        "description": "查询团伙关联图谱",
+        "enabled": true,
+        "callCount24h": 3111
+      },
+      {
+        "name": "callMLModel",
+        "description": "调用 ML 模型评分",
+        "enabled": true,
+        "callCount24h": 772
+      }
+    ],
+    "systemPrompt": "你是「Fraud 欺诈深度分析」,负责对支付订单的 fraud 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 5402,
+    "avgLatencyMs": 1538,
+    "avgTokens": 1765,
+    "costUSD24h": 26.77,
+    "hallucinationRate": 0.0442
+  },
+  {
+    "id": "agent-behavior",
+    "name": "Behavior 行为异常",
+    "description": "针对 behavioral 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "deepseek-v3",
+    "model": "deepseek-chat",
+    "temperature": 0.42,
+    "topP": 0.93,
+    "maxTokens": 4096,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 65,
+    "triggerCategories": [
+      "behavioral"
+    ],
+    "enableMultimodal": true,
+    "enableCausalGraph": false,
+    "enableRAG": true,
+    "ragTopK": 8,
+    "ragKnowledgeBases": [
+      "kb-1"
+    ],
+    "tools": [
+      {
+        "name": "sendNotification",
+        "description": "推送 IM/邮件通知",
+        "enabled": true,
+        "callCount24h": 1746
+      },
+      {
+        "name": "queryGraph",
+        "description": "查询团伙关联图谱",
+        "enabled": true,
+        "callCount24h": 1946
+      },
+      {
+        "name": "checkBlacklist",
+        "description": "查询黑名单 / OFAC",
+        "enabled": false,
+        "callCount24h": 1061
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": true,
+        "callCount24h": 1677
+      },
+      {
+        "name": "callMLModel",
+        "description": "调用 ML 模型评分",
+        "enabled": true,
+        "callCount24h": 1720
+      }
+    ],
+    "systemPrompt": "你是「Behavior 行为异常」,负责对支付订单的 behavioral 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 2180,
+    "avgLatencyMs": 1883,
+    "avgTokens": 1697,
+    "costUSD24h": 33.77,
+    "hallucinationRate": 0.0288
+  },
+  {
+    "id": "agent-recon",
+    "name": "Recon 智能对账",
+    "description": "针对 reconciliation 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "gpt-4o",
+    "model": "gpt-4o-mini",
+    "temperature": 0.41,
+    "topP": 0.94,
+    "maxTokens": 2048,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 75,
+    "triggerCategories": [
+      "reconciliation"
+    ],
+    "enableMultimodal": true,
+    "enableCausalGraph": true,
+    "enableRAG": true,
+    "ragTopK": 3,
+    "ragKnowledgeBases": [
+      "kb-3"
+    ],
+    "tools": [
+      {
+        "name": "generateRule",
+        "description": "生成 DSL 风控规则建议",
+        "enabled": true,
+        "callCount24h": 563
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": false,
+        "callCount24h": 2461
+      },
+      {
+        "name": "queryGraph",
+        "description": "查询团伙关联图谱",
+        "enabled": true,
+        "callCount24h": 1233
+      },
+      {
+        "name": "ragSearch",
+        "description": "RAG 检索知识库",
+        "enabled": true,
+        "callCount24h": 2687
+      }
+    ],
+    "systemPrompt": "你是「Recon 智能对账」,负责对支付订单的 reconciliation 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 4629,
+    "avgLatencyMs": 1752,
+    "avgTokens": 1417,
+    "costUSD24h": 19.94,
+    "hallucinationRate": 0.015
+  },
+  {
+    "id": "agent-chargeback",
+    "name": "Chargeback 拒付应对",
+    "description": "针对 chargeback 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "claude-sonnet",
+    "model": "claude-3-5-sonnet",
+    "temperature": 0.2,
+    "topP": 0.96,
+    "maxTokens": 2048,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 75,
+    "triggerCategories": [
+      "chargeback"
+    ],
+    "enableMultimodal": true,
+    "enableCausalGraph": false,
+    "enableRAG": true,
+    "ragTopK": 3,
+    "ragKnowledgeBases": [
+      "kb-4"
+    ],
+    "tools": [
+      {
+        "name": "ragSearch",
+        "description": "RAG 检索知识库",
+        "enabled": true,
+        "callCount24h": 773
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": true,
+        "callCount24h": 1833
+      },
+      {
+        "name": "queryGraph",
+        "description": "查询团伙关联图谱",
+        "enabled": true,
+        "callCount24h": 1037
+      },
+      {
+        "name": "callMLModel",
+        "description": "调用 ML 模型评分",
+        "enabled": true,
+        "callCount24h": 1133
+      }
+    ],
+    "systemPrompt": "你是「Chargeback 拒付应对」,负责对支付订单的 chargeback 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 2336,
+    "avgLatencyMs": 2217,
+    "avgTokens": 1206,
+    "costUSD24h": 10.12,
+    "hallucinationRate": 0.0419
+  },
+  {
+    "id": "agent-compliance",
+    "name": "Compliance 合规审查",
+    "description": "针对 compliance 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "qwen-max",
+    "model": "qwen-max-2024",
+    "temperature": 0.43,
+    "topP": 0.92,
+    "maxTokens": 1024,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 60,
+    "triggerCategories": [
+      "compliance"
+    ],
+    "enableMultimodal": true,
+    "enableCausalGraph": true,
+    "enableRAG": true,
+    "ragTopK": 5,
+    "ragKnowledgeBases": [
+      "kb-4"
+    ],
+    "tools": [
+      {
+        "name": "checkBlacklist",
+        "description": "查询黑名单 / OFAC",
+        "enabled": true,
+        "callCount24h": 1442
+      },
+      {
+        "name": "callMLModel",
+        "description": "调用 ML 模型评分",
+        "enabled": true,
+        "callCount24h": 3119
+      },
+      {
+        "name": "ragSearch",
+        "description": "RAG 检索知识库",
+        "enabled": true,
+        "callCount24h": 1788
+      }
+    ],
+    "systemPrompt": "你是「Compliance 合规审查」,负责对支付订单的 compliance 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 1068,
+    "avgLatencyMs": 2108,
+    "avgTokens": 1125,
+    "costUSD24h": 21.72,
+    "hallucinationRate": 0.0263
+  },
+  {
+    "id": "agent-action",
+    "name": "Action 处置执行",
+    "description": "针对 fraud 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "deepseek-v3",
+    "model": "deepseek-chat",
+    "temperature": 0.26,
+    "topP": 0.92,
+    "maxTokens": 1024,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 60,
+    "triggerCategories": [
+      "fraud"
+    ],
+    "enableMultimodal": false,
+    "enableCausalGraph": true,
+    "enableRAG": true,
+    "ragTopK": 5,
+    "ragKnowledgeBases": [
+      "kb-2"
+    ],
+    "tools": [
+      {
+        "name": "sendNotification",
+        "description": "推送 IM/邮件通知",
+        "enabled": true,
+        "callCount24h": 2698
+      },
+      {
+        "name": "ragSearch",
+        "description": "RAG 检索知识库",
+        "enabled": true,
+        "callCount24h": 1990
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": true,
+        "callCount24h": 4189
+      },
+      {
+        "name": "generateRule",
+        "description": "生成 DSL 风控规则建议",
+        "enabled": false,
+        "callCount24h": 3113
+      }
+    ],
+    "systemPrompt": "你是「Action 处置执行」,负责对支付订单的 fraud 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 1683,
+    "avgLatencyMs": 1632,
+    "avgTokens": 917,
+    "costUSD24h": 22.63,
+    "hallucinationRate": 0.0318
+  },
+  {
+    "id": "agent-report",
+    "name": "Report 报告生成",
+    "description": "针对 fraud 类异常的专家 Agent",
+    "enabled": true,
+    "provider": "qwen-max",
+    "model": "qwen-max-2024",
+    "temperature": 0.11,
+    "topP": 0.9,
+    "maxTokens": 4096,
+    "triggers": [
+      "auto",
+      "rule_escalation"
+    ],
+    "triggerScore": 60,
+    "triggerCategories": [
+      "fraud"
+    ],
+    "enableMultimodal": false,
+    "enableCausalGraph": true,
+    "enableRAG": true,
+    "ragTopK": 3,
+    "ragKnowledgeBases": [
+      "kb-4"
+    ],
+    "tools": [
+      {
+        "name": "sendNotification",
+        "description": "推送 IM/邮件通知",
+        "enabled": true,
+        "callCount24h": 203
+      },
+      {
+        "name": "callMLModel",
+        "description": "调用 ML 模型评分",
+        "enabled": true,
+        "callCount24h": 2087
+      },
+      {
+        "name": "queryGraph",
+        "description": "查询团伙关联图谱",
+        "enabled": true,
+        "callCount24h": 1183
+      },
+      {
+        "name": "fetchUserHistory",
+        "description": "获取用户近 90 天交易历史",
+        "enabled": false,
+        "callCount24h": 1068
+      }
+    ],
+    "systemPrompt": "你是「Report 报告生成」,负责对支付订单的 fraud 类异常进行深度推理。请输出: 1) 主分类与置信度 2) 核心证据链 3) 因果根因 4) 处置建议。结论需基于 RAG 检索到的事实片段,严禁幻觉。",
+    "enableHallucinationCheck": true,
+    "enableFactGrounding": true,
+    "enableSensitiveFilter": true,
+    "callCount24h": 5234,
+    "avgLatencyMs": 1480,
+    "avgTokens": 1744,
+    "costUSD24h": 27.12,
+    "hallucinationRate": 0.0142
+  }
+]

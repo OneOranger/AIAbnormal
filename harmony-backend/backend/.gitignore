@@ -8,5 +8,8 @@ data/models/*.pkl
 data/vectors/
 data/cache/
 data/incoming/
+storage/runtime/*.jsonl
+storage/kb/faiss_index/*
+!storage/kb/faiss_index/.gitkeep
 *.log
 .DS_Store

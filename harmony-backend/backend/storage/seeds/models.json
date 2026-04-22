@@ -1,0 +1,349 @@
+[
+  {
+    "id": "fraud-xgb-v2",
+    "name": "欺诈识别主模型",
+    "algo": "XGBoost",
+    "version": "v2.4.2",
+    "status": "online",
+    "category": "fraud",
+    "description": "二分类 + 概率输出,集成 38 维行为/设备/图特征",
+    "threshold": 73.1,
+    "weight": 0.23,
+    "auc": 0.8679,
+    "precision": 0.784,
+    "recall": 0.7015,
+    "f1": 0.871,
+    "ks": 0.602,
+    "qps": 6559,
+    "p99Latency": 54,
+    "driftScore": 0.078,
+    "lastTrainedAt": "2026-04-16T13:49:23.381536Z",
+    "nextRetrainAt": "2026-04-27T13:49:23.381536Z",
+    "trainSamples": 6716837,
+    "features": [
+      {
+        "name": "graph_centrality",
+        "importance": 0.919,
+        "type": "graph"
+      },
+      {
+        "name": "amount_zscore",
+        "importance": 0.867,
+        "type": "numeric"
+      },
+      {
+        "name": "device_fp_emb",
+        "importance": 0.815,
+        "type": "embedding"
+      },
+      {
+        "name": "ip_velocity_1h",
+        "importance": 0.63,
+        "type": "numeric"
+      },
+      {
+        "name": "device_age_days",
+        "importance": 0.615,
+        "type": "numeric"
+      },
+      {
+        "name": "login_to_pay_secs",
+        "importance": 0.397,
+        "type": "numeric"
+      },
+      {
+        "name": "merchant_risk",
+        "importance": 0.254,
+        "type": "categorical"
+      },
+      {
+        "name": "user_account_age",
+        "importance": 0.124,
+        "type": "numeric"
+      }
+    ],
+    "owner": "王小风",
+    "abTestRatio": null
+  },
+  {
+    "id": "fraud-graphsage-v1",
+    "name": "团伙关联图模型",
+    "algo": "GraphSAGE",
+    "version": "v2.1.7",
+    "status": "online",
+    "category": "fraud",
+    "description": "用户-设备-IP 三元图,2 跳邻居聚合",
+    "threshold": 53.5,
+    "weight": 0.42,
+    "auc": 0.8841,
+    "precision": 0.8968,
+    "recall": 0.7394,
+    "f1": 0.8749,
+    "ks": 0.697,
+    "qps": 7486,
+    "p99Latency": 95,
+    "driftScore": 0.164,
+    "lastTrainedAt": "2026-04-13T13:49:23.381536Z",
+    "nextRetrainAt": "2026-04-24T13:49:23.381536Z",
+    "trainSamples": 1586660,
+    "features": [
+      {
+        "name": "user_account_age",
+        "importance": 0.852,
+        "type": "numeric"
+      },
+      {
+        "name": "login_to_pay_secs",
+        "importance": 0.719,
+        "type": "numeric"
+      },
+      {
+        "name": "ip_velocity_1h",
+        "importance": 0.698,
+        "type": "numeric"
+      },
+      {
+        "name": "device_age_days",
+        "importance": 0.624,
+        "type": "numeric"
+      },
+      {
+        "name": "merchant_risk",
+        "importance": 0.546,
+        "type": "categorical"
+      },
+      {
+        "name": "device_fp_emb",
+        "importance": 0.542,
+        "type": "embedding"
+      },
+      {
+        "name": "amount_zscore",
+        "importance": 0.232,
+        "type": "numeric"
+      },
+      {
+        "name": "graph_centrality",
+        "importance": 0.208,
+        "type": "graph"
+      }
+    ],
+    "owner": "周合规",
+    "abTestRatio": null
+  },
+  {
+    "id": "behavior-iforest-v1",
+    "name": "行为异常检测",
+    "algo": "IsolationForest",
+    "version": "v2.5.6",
+    "status": "online",
+    "category": "behavioral",
+    "description": "无监督离群检测,适合冷启动",
+    "threshold": 62.6,
+    "weight": 0.24,
+    "auc": 0.9052,
+    "precision": 0.8617,
+    "recall": 0.7774,
+    "f1": 0.8002,
+    "ks": 0.465,
+    "qps": 4979,
+    "p99Latency": 63,
+    "driftScore": 0.166,
+    "lastTrainedAt": "2026-04-15T13:49:23.381536Z",
+    "nextRetrainAt": "2026-04-25T13:49:23.381536Z",
+    "trainSamples": 3060804,
+    "features": [
+      {
+        "name": "hour_of_day",
+        "importance": 0.862,
+        "type": "numeric"
+      },
+      {
+        "name": "tx_freq_5min",
+        "importance": 0.359,
+        "type": "numeric"
+      },
+      {
+        "name": "amount",
+        "importance": 0.25,
+        "type": "numeric"
+      },
+      {
+        "name": "country_distinct_1h",
+        "importance": 0.132,
+        "type": "numeric"
+      }
+    ],
+    "owner": "Sarah Kim",
+    "abTestRatio": null
+  },
+  {
+    "id": "behavior-lstm-v1",
+    "name": "支付序列模型",
+    "algo": "DeepFM",
+    "version": "v2.3.0",
+    "status": "shadow",
+    "category": "behavioral",
+    "description": "近 30 笔行为序列编码 + 注意力",
+    "threshold": 76.9,
+    "weight": 0.38,
+    "auc": 0.9487,
+    "precision": 0.7851,
+    "recall": 0.78,
+    "f1": 0.7563,
+    "ks": 0.469,
+    "qps": 10285,
+    "p99Latency": 39,
+    "driftScore": 0.103,
+    "lastTrainedAt": "2026-04-08T13:49:23.381536Z",
+    "nextRetrainAt": "2026-04-25T13:49:23.381536Z",
+    "trainSamples": 1716507,
+    "features": [
+      {
+        "name": "amount",
+        "importance": 0.818,
+        "type": "numeric"
+      },
+      {
+        "name": "hour_of_day",
+        "importance": 0.563,
+        "type": "numeric"
+      },
+      {
+        "name": "country_distinct_1h",
+        "importance": 0.488,
+        "type": "numeric"
+      },
+      {
+        "name": "tx_freq_5min",
+        "importance": 0.184,
+        "type": "numeric"
+      }
+    ],
+    "owner": "李对账",
+    "abTestRatio": 0.33
+  },
+  {
+    "id": "recon-match-v1",
+    "name": "对账智能匹配",
+    "algo": "GBDT",
+    "version": "v2.7.9",
+    "status": "training",
+    "category": "reconciliation",
+    "description": "金额/时序/参考号模糊匹配",
+    "threshold": 70.6,
+    "weight": 0.36,
+    "auc": 0.8668,
+    "precision": 0.8532,
+    "recall": 0.7942,
+    "f1": 0.7627,
+    "ks": 0.479,
+    "qps": 3548,
+    "p99Latency": 101,
+    "driftScore": 0.134,
+    "lastTrainedAt": "2026-04-20T13:49:23.381536Z",
+    "nextRetrainAt": "2026-04-24T13:49:23.381536Z",
+    "trainSamples": 4399025,
+    "features": [
+      {
+        "name": "channel",
+        "importance": 0.908,
+        "type": "categorical"
+      },
+      {
+        "name": "time_gap_min",
+        "importance": 0.75,
+        "type": "numeric"
+      },
+      {
+        "name": "amount_diff",
+        "importance": 0.649,
+        "type": "numeric"
+      },
+      {
+        "name": "ref_similarity",
+        "importance": 0.573,
+        "type": "numeric"
+      }
+    ],
+    "owner": "李对账",
+    "abTestRatio": null
+  },
+  {
+    "id": "chargeback-pred-v1",
+    "name": "拒付概率预测",
+    "algo": "LightGBM",
+    "version": "v2.6.7",
+    "status": "online",
+    "category": "chargeback",
+    "description": "T+30 内拒付概率预测",
+    "threshold": 52.5,
+    "weight": 0.39,
+    "auc": 0.8745,
+    "precision": 0.8912,
+    "recall": 0.7868,
+    "f1": 0.9078,
+    "ks": 0.683,
+    "qps": 5812,
+    "p99Latency": 27,
+    "driftScore": 0.108,
+    "lastTrainedAt": "2026-04-13T13:49:23.381536Z",
+    "nextRetrainAt": "2026-04-25T13:49:23.381536Z",
+    "trainSamples": 7680752,
+    "features": [
+      {
+        "name": "user_cb_history",
+        "importance": 0.61,
+        "type": "numeric"
+      },
+      {
+        "name": "merchant_cb_rate",
+        "importance": 0.505,
+        "type": "numeric"
+      },
+      {
+        "name": "category",
+        "importance": 0.169,
+        "type": "categorical"
+      }
+    ],
+    "owner": "Alex Chen",
+    "abTestRatio": null
+  },
+  {
+    "id": "compliance-text-v1",
+    "name": "合规文本风险",
+    "algo": "AutoEncoder",
+    "version": "v2.7.4",
+    "status": "online",
+    "category": "compliance",
+    "description": "交易备注+商户名 embedding 异常",
+    "threshold": 70.0,
+    "weight": 0.22,
+    "auc": 0.9418,
+    "precision": 0.9065,
+    "recall": 0.717,
+    "f1": 0.8318,
+    "ks": 0.458,
+    "qps": 6525,
+    "p99Latency": 63,
+    "driftScore": 0.05,
+    "lastTrainedAt": "2026-04-08T13:49:23.381536Z",
+    "nextRetrainAt": "2026-04-28T13:49:23.381536Z",
+    "trainSamples": 6626760,
+    "features": [
+      {
+        "name": "aml_score",
+        "importance": 0.774,
+        "type": "numeric"
+      },
+      {
+        "name": "text_emb",
+        "importance": 0.246,
+        "type": "embedding"
+      }
+    ],
+    "owner": "Sarah Kim",
+    "abTestRatio": null
+  }
+]

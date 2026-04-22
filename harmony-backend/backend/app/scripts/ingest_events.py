@@ -42,7 +42,7 @@ async def _import_file(path: Path, run_pipeline: bool) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Import local payment event JSONL into data/runtime/orders.jsonl")
+    parser = argparse.ArgumentParser(description="Import local payment event JSONL into storage/runtime/orders.jsonl")
     parser.add_argument("path", nargs="?", default="data/examples/payment_events.jsonl")
     parser.add_argument("--run-pipeline", action="store_true", help="Run the full 9-stage pipeline after each import")
     args = parser.parse_args()

@@ -1,0 +1,166 @@
+[
+  {
+    "id": "p-1",
+    "name": "欺诈高分自动拦截",
+    "description": "AI 推荐 + 人工策略组合",
+    "enabled": true,
+    "priority": 100,
+    "category": "fraud",
+    "riskLevel": "critical",
+    "minScore": 85,
+    "minConfidence": 90,
+    "primaryAction": "intercept",
+    "secondaryActions": [
+      "force_2fa",
+      "add_blacklist"
+    ],
+    "autoExecute": true,
+    "requireHumanApproval": false,
+    "notifyChannels": [
+      "sms",
+      "email"
+    ],
+    "feedbackRequired": true,
+    "cooldownMinutes": 30,
+    "executedCount24h": 794,
+    "successRate": 0.862,
+    "reversedCount24h": 7,
+    "avgProcessingMs": 456,
+    "updatedAt": "2026-04-15T13:49:23.392751Z"
+  },
+  {
+    "id": "p-2",
+    "name": "高风险人工复核",
+    "description": "AI 推荐 + 人工策略组合",
+    "enabled": true,
+    "priority": 90,
+    "category": "all",
+    "riskLevel": "high",
+    "minScore": 65,
+    "minConfidence": 75,
+    "primaryAction": "review",
+    "secondaryActions": [
+      "watchlist"
+    ],
+    "autoExecute": false,
+    "requireHumanApproval": false,
+    "notifyChannels": [
+      "im"
+    ],
+    "feedbackRequired": true,
+    "cooldownMinutes": 5,
+    "executedCount24h": 680,
+    "successRate": 0.99,
+    "reversedCount24h": 14,
+    "avgProcessingMs": 1073,
+    "updatedAt": "2026-04-16T13:49:23.392751Z"
+  },
+  {
+    "id": "p-3",
+    "name": "重复支付自动退款",
+    "description": "AI 推荐 + 人工策略组合",
+    "enabled": true,
+    "priority": 80,
+    "category": "system",
+    "riskLevel": "all",
+    "minScore": 30,
+    "minConfidence": 80,
+    "primaryAction": "auto_refund",
+    "secondaryActions": [
+      "notify_user"
+    ],
+    "autoExecute": true,
+    "requireHumanApproval": false,
+    "notifyChannels": [
+      "email",
+      "sms"
+    ],
+    "feedbackRequired": true,
+    "cooldownMinutes": 15,
+    "executedCount24h": 267,
+    "successRate": 0.87,
+    "reversedCount24h": 22,
+    "avgProcessingMs": 1575,
+    "updatedAt": "2026-04-19T13:49:23.392751Z"
+  },
+  {
+    "id": "p-4",
+    "name": "合规命中冻结账户",
+    "description": "AI 推荐 + 人工策略组合",
+    "enabled": true,
+    "priority": 70,
+    "category": "compliance",
+    "riskLevel": "critical",
+    "minScore": 80,
+    "minConfidence": 85,
+    "primaryAction": "freeze_account",
+    "secondaryActions": [
+      "escalate"
+    ],
+    "autoExecute": false,
+    "requireHumanApproval": true,
+    "notifyChannels": [
+      "webhook",
+      "sms"
+    ],
+    "feedbackRequired": true,
+    "cooldownMinutes": 5,
+    "executedCount24h": 414,
+    "successRate": 0.877,
+    "reversedCount24h": 1,
+    "avgProcessingMs": 1643,
+    "updatedAt": "2026-04-12T13:49:23.392751Z"
+  },
+  {
+    "id": "p-5",
+    "name": "中等风险加观察",
+    "description": "AI 推荐 + 人工策略组合",
+    "enabled": true,
+    "priority": 60,
+    "category": "behavioral",
+    "riskLevel": "medium",
+    "minScore": 40,
+    "minConfidence": 60,
+    "primaryAction": "watchlist",
+    "secondaryActions": [],
+    "autoExecute": true,
+    "requireHumanApproval": false,
+    "notifyChannels": [
+      "webhook"
+    ],
+    "feedbackRequired": true,
+    "cooldownMinutes": 5,
+    "executedCount24h": 906,
+    "successRate": 0.851,
+    "reversedCount24h": 15,
+    "avgProcessingMs": 773,
+    "updatedAt": "2026-04-12T13:49:23.392751Z"
+  },
+  {
+    "id": "p-6",
+    "name": "拒付高风险升级",
+    "description": "AI 推荐 + 人工策略组合",
+    "enabled": true,
+    "priority": 50,
+    "category": "chargeback",
+    "riskLevel": "high",
+    "minScore": 70,
+    "minConfidence": 75,
+    "primaryAction": "escalate",
+    "secondaryActions": [
+      "notify_user"
+    ],
+    "autoExecute": false,
+    "requireHumanApproval": true,
+    "notifyChannels": [
+      "sms"
+    ],
+    "feedbackRequired": true,
+    "cooldownMinutes": 15,
+    "executedCount24h": 449,
+    "successRate": 0.985,
+    "reversedCount24h": 21,
+    "avgProcessingMs": 1115,
+    "updatedAt": "2026-04-19T13:49:23.392751Z"
+  }
+]

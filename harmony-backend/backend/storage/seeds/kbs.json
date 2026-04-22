@@ -1,0 +1,47 @@
+[
+  {
+    "id": "kb-1",
+    "name": "风控规则文档库",
+    "type": "rule_doc",
+    "documentCount": 416,
+    "vectorCount": 49854,
+    "lastIndexedAt": "2026-04-20T07:49:23.389237Z",
+    "embedding": "m3e-large"
+  },
+  {
+    "id": "kb-2",
+    "name": "历史欺诈案例库",
+    "type": "case_history",
+    "documentCount": 3313,
+    "vectorCount": 40209,
+    "lastIndexedAt": "2026-04-21T04:49:23.389237Z",
+    "embedding": "text-embedding-3-large"
+  },
+  {
+    "id": "kb-3",
+    "name": "支付合规法规库",
+    "type": "regulation",
+    "documentCount": 357,
+    "vectorCount": 11965,
+    "lastIndexedAt": "2026-04-20T10:49:23.389237Z",
+    "embedding": "m3e-large"
+  },
+  {
+    "id": "kb-4",
+    "name": "商户画像库",
+    "type": "merchant_profile",
+    "documentCount": 661,
+    "vectorCount": 76639,
+    "lastIndexedAt": "2026-04-19T20:49:23.389237Z",
+    "embedding": "m3e-large"
+  },
+  {
+    "id": "kb-5",
+    "name": "欺诈模式知识库",
+    "type": "fraud_pattern",
+    "documentCount": 1852,
+    "vectorCount": 42992,
+    "lastIndexedAt": "2026-04-21T04:49:23.389237Z",
+    "embedding": "m3e-large"
+  }
+]

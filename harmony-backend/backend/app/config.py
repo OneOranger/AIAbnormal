@@ -17,8 +17,11 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://localhost:8080"
 
-    # ---- Data ----
+    # ---- Data / Storage ----
+    # DATA_DIR keeps generated ML/cache artifacts. STORAGE_DIR keeps business
+    # seed/runtime data exactly as described in backend-design-v1.md.
     DATA_DIR: str = "./data"
+    STORAGE_DIR: str = "./storage"
     MOCK_ORDER_COUNT: int = 1200
     MOCK_RECON_COUNT: int = 480
     MOCK_DATA_ENABLED: bool = True
@@ -54,8 +57,20 @@ class Settings(BaseSettings):
         return p
 
     @property
+    def storage_path(self) -> Path:
+        p = Path(self.STORAGE_DIR).resolve()
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @property
+    def seed_path(self) -> Path:
+        p = self.storage_path / "seeds"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @property
     def runtime_path(self) -> Path:
-        p = self.data_path / "runtime"
+        p = self.storage_path / "runtime"
         p.mkdir(parents=True, exist_ok=True)
         return p
 
@@ -67,7 +82,13 @@ class Settings(BaseSettings):
 
     @property
     def vectors_path(self) -> Path:
-        p = self.data_path / "vectors"
+        p = self.storage_path / "kb" / "faiss_index"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @property
+    def kb_path(self) -> Path:
+        p = self.storage_path / "kb"
         p.mkdir(parents=True, exist_ok=True)
         return p
 

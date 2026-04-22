@@ -48,6 +48,9 @@ async def execute_action(order_id: str, req: ActionRequest, bg: BackgroundTasks)
         "intercept": "intercepted", "release": "released",
         "auto_refund": "refunded", "review": "pending_review",
         "observe": "observing", "escalate": "escalated",
+        "force_2fa": "pending_review", "freeze_account": "escalated",
+        "add_blacklist": "intercepted", "watchlist": "observing",
+        "notify_user": "observing", "dispute_reply": "pending_review",
     }
     if req.action in status_map:
         o.status = status_map[req.action]  # type: ignore
