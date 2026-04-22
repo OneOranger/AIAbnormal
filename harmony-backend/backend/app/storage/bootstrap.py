@@ -34,24 +34,42 @@ def ensure_initialized() -> None:
     if _initialized:
         return
 
-    # Orders
-    if not orders_repo.list_all():
-        logger.info(f"🌱 Seeding {settings.MOCK_ORDER_COUNT} orders...")
-        orders_repo.reset_with(generate_orders())
+    if settings.MOCK_DATA_ENABLED:
+        # Orders / recon / feedback are demo business data. They can be disabled
+        # for real-flow tests that ingest production-like local JSONL files.
+        if not orders_repo.list_all():
+            logger.info(f"🌱 Seeding {settings.MOCK_ORDER_COUNT} orders...")
+            orders_repo.reset_with(generate_orders())
 
-    # Recon
-    if not recon_repo.list_all():
-        logger.info(f"🌱 Seeding {settings.MOCK_RECON_COUNT} recon records...")
-        recon_repo.reset_with(generate_recon())
+        if not recon_repo.list_all():
+            logger.info(f"🌱 Seeding {settings.MOCK_RECON_COUNT} recon records...")
+            recon_repo.reset_with(generate_recon())
+    else:
+        logger.info("MOCK_DATA_ENABLED=false, skip demo orders/reconciliation/feedback seeding")
+        # Load existing JSONL files if the tester has already imported local data.
+        orders_repo.list_all()
+        recon_repo.list_all()
 
-    # Pipeline configs
-    if not rules_repo.list_all():
-        logger.info("🌱 Seeding rules / models / agents / kbs / policies / feedback ...")
-        rules_repo.reset_with(generate_rules())
-        models_repo.reset_with(generate_models())
-        agents_repo.reset_with(generate_agents())
-        kbs_repo.reset_with(generate_kbs())
-        policies_repo.reset_with(generate_policies())
+    if settings.SEED_DEFAULT_CONFIG:
+        if not rules_repo.list_all():
+            logger.info("🌱 Seeding rules ...")
+            rules_repo.reset_with(generate_rules())
+        if not models_repo.list_all():
+            logger.info("🌱 Seeding models ...")
+            models_repo.reset_with(generate_models())
+        if not agents_repo.list_all():
+            logger.info("🌱 Seeding agents ...")
+            agents_repo.reset_with(generate_agents())
+        if not kbs_repo.list_all():
+            logger.info("🌱 Seeding knowledge bases ...")
+            kbs_repo.reset_with(generate_kbs())
+        if not policies_repo.list_all():
+            logger.info("🌱 Seeding policies ...")
+            policies_repo.reset_with(generate_policies())
+    elif not settings.SEED_DEFAULT_CONFIG:
+        logger.info("SEED_DEFAULT_CONFIG=false, skip rules/models/agents/policies seeding")
+
+    if settings.MOCK_DATA_ENABLED and not feedback_repo.list_all():
         feedback_repo.reset_with(generate_feedback())
 
     _initialized = True

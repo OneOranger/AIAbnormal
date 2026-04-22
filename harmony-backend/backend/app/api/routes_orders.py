@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.schemas.order import OrderListResponse, ActionRequest, ActionResponse, AnomalyOrder
 from app.storage import orders_repo
+from app.storage import runtime_log
 from app.pipeline import process_order
 
 router = APIRouter()
@@ -51,6 +52,12 @@ async def execute_action(order_id: str, req: ActionRequest, bg: BackgroundTasks)
     if req.action in status_map:
         o.status = status_map[req.action]  # type: ignore
         orders_repo.update(o)
+    runtime_log.log_action({
+        "order_no": o.orderNo,
+        "action": req.action,
+        "source": "manual_api",
+        "status": o.status,
+    })
     return ActionResponse(ok=True, message=f"已对订单 {o.orderNo} 执行: {req.action}")
 
 

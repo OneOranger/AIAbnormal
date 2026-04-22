@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Brain, Sparkles, FileText, Wand2, Layers, GitBranch, Zap, ArrowRight } from "lucide-react";
-import { MOCK_ORDERS } from "@/lib/mock-data";
+import { api } from "@/lib/api";
 import { CATEGORY_META, CATEGORIES } from "@/lib/taxonomy";
 import { CategoryChip } from "@/components/chips";
 import { RiskBadge } from "@/components/risk-badge";
 import { formatMoney, timeAgo } from "@/lib/format";
+import type { AnomalyOrder } from "@/lib/types";
 
 export const Route = createFileRoute("/analysis/")({
   component: AnalysisPage,
@@ -13,33 +14,51 @@ export const Route = createFileRoute("/analysis/")({
 });
 
 function AnalysisPage() {
-  const [selectedId, setSelectedId] = useState<string>(MOCK_ORDERS[0]?.id ?? "");
+  const [orders, setOrders] = useState<AnomalyOrder[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
 
-  const candidateOrders = useMemo(
-    () => MOCK_ORDERS.filter((o) => o.riskLevel === "critical" || o.riskLevel === "high").slice(0, 24),
-    [],
-  );
-  const selected = MOCK_ORDERS.find((o) => o.id === selectedId) ?? candidateOrders[0];
+  useEffect(() => {
+    let alive = true;
+    api.listAllOrders().then((items) => {
+      if (!alive) return;
+      setOrders(items);
+      const firstCandidate = items.find((o) => o.riskLevel === "critical" || o.riskLevel === "high") ?? items[0];
+      setSelectedId(firstCandidate?.id ?? "");
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
-  function generateReport() {
+  const candidateOrders = useMemo(
+    () => orders.filter((o) => o.riskLevel === "critical" || o.riskLevel === "high").slice(0, 24),
+    [orders],
+  );
+  const selected = orders.find((o) => o.id === selectedId) ?? candidateOrders[0];
+
+  async function generateReport() {
+    if (!selected) return;
     setGenerating(true);
     setGenerated(false);
-    setTimeout(() => {
+    try {
+      await api.analyzeOrder(selected.id);
       setGenerating(false);
       setGenerated(true);
-    }, 1400);
+    } catch {
+      setGenerating(false);
+    }
   }
 
   const categoryStats = useMemo(() => {
     return CATEGORIES.map((c) => {
-      const list = MOCK_ORDERS.filter((o) => o.primaryCategory === c);
+      const list = orders.filter((o) => o.primaryCategory === c);
       const avgScore = list.length ? list.reduce((s, o) => s + o.riskScore, 0) / list.length : 0;
       const critical = list.filter((o) => o.riskLevel === "critical").length;
       return { category: c, count: list.length, avgScore: Math.round(avgScore), critical };
     });
-  }, []);
+  }, [orders]);
 
   return (
     <div className="p-6 lg:p-8 max-w-[1600px] mx-auto space-y-5">
@@ -99,11 +118,18 @@ function AnalysisPage() {
                   </div>
                   <div className="mt-1.5 flex items-center justify-between">
                     <CategoryChip category={o.primaryCategory} />
-                    <span className="text-[10.5px] text-muted-foreground">{timeAgo(o.createdAt)}</span>
+                    <span className="text-[10.5px] text-muted-foreground" suppressHydrationWarning>
+                      {timeAgo(o.createdAt)}
+                    </span>
                   </div>
                 </button>
               );
             })}
+            {candidateOrders.length === 0 && (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                暂无高风险候选订单
+              </div>
+            )}
           </div>
         </div>
 

@@ -7,5 +7,6 @@ data/runtime/*.jsonl
 data/models/*.pkl
 data/vectors/
 data/cache/
+data/incoming/
 *.log
 .DS_Store

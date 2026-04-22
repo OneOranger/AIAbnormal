@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -24,11 +24,12 @@ import {
   CheckCircle2,
   Activity,
 } from "lucide-react";
-import { MOCK_ORDERS, ordersByCategory, ordersTimeline } from "@/lib/mock-data";
+import { api } from "@/lib/api";
 import { CATEGORY_META } from "@/lib/taxonomy";
 import { CategoryChip, StatusChip } from "@/components/chips";
 import { RiskBadge } from "@/components/risk-badge";
 import { formatMoney, timeAgo } from "@/lib/format";
+import type { AnomalyCategory, AnomalyOrder } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
   component: Overview,
@@ -36,25 +37,42 @@ export const Route = createFileRoute("/")({
 });
 
 function Overview() {
-  const stats = useMemo(() => {
-    const total = MOCK_ORDERS.length;
-    const critical = MOCK_ORDERS.filter((o) => o.riskLevel === "critical").length;
-    const intercepted = MOCK_ORDERS.filter((o) => o.status === "intercepted").length;
-    const pending = MOCK_ORDERS.filter((o) => o.status === "pending_review").length;
-    const savedAmount = MOCK_ORDERS.filter((o) => o.status === "intercepted").reduce((s, o) => s + o.amount, 0);
-    return { total, critical, intercepted, pending, savedAmount };
+  const [orders, setOrders] = useState<AnomalyOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    api.listAllOrders()
+      .then((items) => {
+        if (alive) setOrders(items);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  const byCat = useMemo(() => ordersByCategory(), []);
-  const timeline = useMemo(() => ordersTimeline(14), []);
-  const topOrders = MOCK_ORDERS.slice(0, 6);
+  const stats = useMemo(() => {
+    const total = orders.length;
+    const critical = orders.filter((o) => o.riskLevel === "critical").length;
+    const intercepted = orders.filter((o) => o.status === "intercepted").length;
+    const pending = orders.filter((o) => o.status === "pending_review").length;
+    const savedAmount = orders.filter((o) => o.status === "intercepted").reduce((s, o) => s + o.amount, 0);
+    return { total, critical, intercepted, pending, savedAmount };
+  }, [orders]);
+
+  const byCat = useMemo(() => ordersByCategory(orders), [orders]);
+  const timeline = useMemo(() => ordersTimeline(orders, 14), [orders]);
+  const topOrders = orders.slice(0, 6);
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">运营概览</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          AI 驱动的支付异常订单全景看板 · 数据每 30 秒刷新
+          AI 驱动的支付异常订单全景看板 · {loading ? "数据加载中" : "数据来自统一 API"}
         </p>
       </div>
 
@@ -232,6 +250,13 @@ function Overview() {
                   </td>
                 </tr>
               ))}
+              {!loading && topOrders.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                    暂无订单数据,可通过后端 /ingest 导入测试订单
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -267,6 +292,30 @@ function Overview() {
       </Card>
     </div>
   );
+}
+
+function ordersByCategory(orders: AnomalyOrder[]) {
+  const map = new Map<AnomalyCategory, number>();
+  (Object.keys(CATEGORY_META) as AnomalyCategory[]).forEach((c) => map.set(c, 0));
+  orders.forEach((o) => map.set(o.primaryCategory, (map.get(o.primaryCategory) ?? 0) + 1));
+  return Array.from(map.entries()).map(([category, count]) => ({ category, count }));
+}
+
+function ordersTimeline(orders: AnomalyOrder[], days = 14) {
+  const buckets: Record<string, { date: string; total: number; critical: number; high: number }> = {};
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400_000);
+    const key = d.toISOString().slice(5, 10);
+    buckets[key] = { date: key, total: 0, critical: 0, high: 0 };
+  }
+  orders.forEach((o) => {
+    const key = o.createdAt.slice(5, 10);
+    if (!buckets[key]) return;
+    buckets[key].total += 1;
+    if (o.riskLevel === "critical") buckets[key].critical += 1;
+    if (o.riskLevel === "high") buckets[key].high += 1;
+  });
+  return Object.values(buckets);
 }
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {

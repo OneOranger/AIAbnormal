@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FileSpreadsheet,
   CheckCircle2,
@@ -12,10 +12,10 @@ import {
   Loader2,
   ArrowRight,
 } from "lucide-react";
-import { MOCK_RECON } from "@/lib/mock-data";
+import { api } from "@/lib/api";
 import { CHANNEL_META } from "@/lib/taxonomy";
 import { formatMoney, formatDateTime } from "@/lib/format";
-import type { ReconStatus } from "@/lib/types";
+import type { ReconRecord, ReconStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/reconciliation/")({
   component: ReconPage,
@@ -48,37 +48,55 @@ function ReconPage() {
   const [running, setRunning] = useState(false);
   const [matchProgress, setMatchProgress] = useState(0);
   const [voucherFor, setVoucherFor] = useState<string | null>(null);
+  const [records, setRecords] = useState<ReconRecord[]>([]);
+  const [allRecords, setAllRecords] = useState<ReconRecord[]>([]);
 
-  const filtered = useMemo(() => {
-    let items = MOCK_RECON;
-    if (statusFilter !== "all") items = items.filter((r) => r.status === statusFilter);
-    if (channelFilter !== "all") items = items.filter((r) => r.channel === channelFilter);
-    if (search.trim()) {
-      const s = search.toLowerCase();
-      items = items.filter((r) => r.internalRef.toLowerCase().includes(s) || r.channelRef.toLowerCase().includes(s));
-    }
-    return items;
+  useEffect(() => {
+    let alive = true;
+    api.listRecon({ status: statusFilter, channel: channelFilter, search }).then((items) => {
+      if (alive) setRecords(items);
+    });
+    return () => {
+      alive = false;
+    };
   }, [statusFilter, channelFilter, search]);
 
-  const stats = useMemo(() => {
-    const total = MOCK_RECON.length;
-    const matched = MOCK_RECON.filter((r) => r.status === "matched").length;
-    const discrepancy = MOCK_RECON.filter((r) => r.status === "discrepancy").length;
-    const missing = MOCK_RECON.filter((r) => r.status === "missing").length;
-    const duplicate = MOCK_RECON.filter((r) => r.status === "duplicate").length;
-    const totalDiff = MOCK_RECON.reduce((s, r) => s + Math.abs(r.diff), 0);
-    return { total, matched, discrepancy, missing, duplicate, totalDiff, matchRate: ((matched / total) * 100).toFixed(1) };
+  useEffect(() => {
+    let alive = true;
+    api.listRecon().then((items) => {
+      if (alive) setAllRecords(items);
+    });
+    return () => {
+      alive = false;
+    };
   }, []);
+
+  const stats = useMemo(() => {
+    const total = allRecords.length;
+    const matched = allRecords.filter((r) => r.status === "matched").length;
+    const discrepancy = allRecords.filter((r) => r.status === "discrepancy").length;
+    const missing = allRecords.filter((r) => r.status === "missing").length;
+    const duplicate = allRecords.filter((r) => r.status === "duplicate").length;
+    const totalDiff = allRecords.reduce((s, r) => s + Math.abs(r.diff), 0);
+    return { total, matched, discrepancy, missing, duplicate, totalDiff, matchRate: total ? ((matched / total) * 100).toFixed(1) : "0.0" };
+  }, [allRecords]);
 
   function runMatch() {
     setRunning(true);
     setMatchProgress(0);
+    const refresh = api.runReconMatch()
+      .then(() => Promise.all([api.listRecon({ status: statusFilter, channel: channelFilter, search }), api.listRecon()]))
+      .then(([filteredItems, allItems]) => {
+        setRecords(filteredItems);
+        setAllRecords(allItems);
+      })
+      .catch(() => undefined);
     const id = setInterval(() => {
       setMatchProgress((p) => {
         const next = p + Math.random() * 12 + 5;
         if (next >= 100) {
           clearInterval(id);
-          setTimeout(() => setRunning(false), 400);
+          refresh.finally(() => setTimeout(() => setRunning(false), 400));
           return 100;
         }
         return next;
@@ -172,7 +190,7 @@ function ReconPage() {
             </option>
           ))}
         </select>
-        <span className="text-xs text-muted-foreground">{filtered.length.toLocaleString()} 条结果</span>
+        <span className="text-xs text-muted-foreground">{records.length.toLocaleString()} 条结果</span>
       </div>
 
       {/* Table */}
@@ -193,7 +211,7 @@ function ReconPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.slice(0, 200).map((r) => {
+              {records.slice(0, 200).map((r) => {
                 const sm = STATUS_META[r.status];
                 const Icon = sm.icon;
                 const channelLabel = CHANNEL_META[r.channel].label;
@@ -264,7 +282,7 @@ function ReconPage() {
               基于差异类型与会计科目映射规则,AI 已生成以下凭证
             </div>
             {(() => {
-              const r = MOCK_RECON.find((x) => x.id === voucherFor);
+              const r = allRecords.find((x) => x.id === voucherFor) ?? records.find((x) => x.id === voucherFor);
               if (!r) return null;
               return (
                 <div className="space-y-3">

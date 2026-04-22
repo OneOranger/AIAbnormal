@@ -1,13 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Filter, Download, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 
+import { api } from "@/lib/api";
 import { CATEGORIES, CATEGORY_META, STATUS_META } from "@/lib/taxonomy";
 import { CategoryChip, StatusChip, Tag } from "@/components/chips";
 import { RiskBadge, RiskScoreBar } from "@/components/risk-badge";
 import { formatMoney, timeAgo } from "@/lib/format";
+import type { AnomalyOrder } from "@/lib/types";
 
 const searchSchema = z.object({
   category: fallback(z.string(), "all").default("all"),
@@ -22,8 +24,6 @@ export const Route = createFileRoute("/orders/")({
   component: OrdersPage,
   head: () => ({ meta: [{ title: "异常订单 · PayGuard AI" }] }),
 });
-
-import { MOCK_ORDERS } from "@/lib/mock-data";
 
 function OrdersPage() {
   const { category, riskLevel, status, q, page } = Route.useSearch();
@@ -64,34 +64,50 @@ function OrdersInner({
   setSearchInput: (s: string) => void;
 }) {
   const PAGE_SIZE = 20;
+  const [items, setItems] = useState<AnomalyOrder[]>([]);
+  const [total, setTotal] = useState(0);
+  const [allOrders, setAllOrders] = useState<AnomalyOrder[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = useMemo(() => {
-    let items = MOCK_ORDERS;
-    if (cat !== "all") items = items.filter((o) => o.primaryCategory === cat);
-    if (rl !== "all") items = items.filter((o) => o.riskLevel === rl);
-    if (st !== "all") items = items.filter((o) => o.status === st);
-    if (q.trim()) {
-      const s = q.toLowerCase();
-      items = items.filter(
-        (o) =>
-          o.orderNo.toLowerCase().includes(s) ||
-          o.userName.toLowerCase().includes(s) ||
-          o.merchantName.toLowerCase().includes(s) ||
-          o.userId.toLowerCase().includes(s),
-      );
-    }
-    return items;
-  }, [cat, rl, st, q]);
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    api.listOrders({
+      page,
+      pageSize: PAGE_SIZE,
+      category: cat,
+      riskLevel: rl,
+      status: st,
+      search: q,
+    }).then((res) => {
+      if (!alive) return;
+      setItems(res.items);
+      setTotal(res.total);
+    }).finally(() => {
+      if (alive) setLoading(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [cat, rl, st, q, page]);
 
-  const total = filtered.length;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const items = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    let alive = true;
+    api.listAllOrders().then((orders) => {
+      if (alive) setAllOrders(orders);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const counts = useMemo(() => {
-    const m: Record<string, number> = { all: MOCK_ORDERS.length };
-    CATEGORIES.forEach((c) => (m[c] = MOCK_ORDERS.filter((o) => o.primaryCategory === c).length));
+    const m: Record<string, number> = { all: allOrders.length };
+    CATEGORIES.forEach((c) => (m[c] = allOrders.filter((o) => o.primaryCategory === c).length));
     return m;
-  }, []);
+  }, [allOrders]);
 
   function setSearch(patch: Record<string, string | number>) {
     navigate({ search: (prev) => ({ ...prev, ...patch, page: patch.page ?? 1 }) as never });
@@ -220,7 +236,7 @@ function OrdersInner({
               {items.length === 0 && (
                 <tr>
                   <td colSpan={8} className="text-center py-10 text-sm text-muted-foreground">
-                    暂无符合条件的订单
+                    {loading ? "订单加载中..." : "暂无符合条件的订单"}
                   </td>
                 </tr>
               )}

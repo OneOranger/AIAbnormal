@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     DATA_DIR: str = "./data"
     MOCK_ORDER_COUNT: int = 1200
     MOCK_RECON_COUNT: int = 480
+    MOCK_DATA_ENABLED: bool = True
+    SEED_DEFAULT_CONFIG: bool = True
     RANDOM_SEED: int = 20260421
 
     # ---- LLM ----

@@ -33,3 +33,30 @@ def test_list_models():
 def test_list_policies():
     r = client.get("/policies")
     assert r.status_code == 200
+
+
+def test_reconciliation_match():
+    r = client.post("/reconciliation/match")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["ok"] is True
+    assert data["total"] >= data["matched"]
+
+
+def test_ingest_minimal_payment_event():
+    r = client.post("/ingest", json={
+        "orderNo": "PAY-TEST-INGEST-001",
+        "eventTime": "2026-04-22T02:14:00Z",
+        "userId": "U-INGEST-001",
+        "merchantId": "M-INGEST-001",
+        "amount": 68000,
+        "currency": "CNY",
+        "channel": "visa",
+        "ip": "45.12.88.10",
+        "ipCountry": "RU",
+        "device": "Headless Chrome",
+    })
+    assert r.status_code == 200
+    data = r.json()
+    assert data["ok"] is True
+    assert data["orderNo"] == "PAY-TEST-INGEST-001"

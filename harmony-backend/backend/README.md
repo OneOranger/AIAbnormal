@@ -181,6 +181,8 @@ backend/
 
 ## 🧪 测试方式
 
+本地 JSONL 数据、mock 开关、真实 LLM 测试流程详见 `LOCAL_DATA_TESTING.md`。
+
 详见 `TESTING.md`,涵盖:
 - API 单元测试 (pytest)
 - 端到端流水线测试

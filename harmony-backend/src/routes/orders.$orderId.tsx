@@ -19,7 +19,6 @@ import {
   Clock,
   Brain,
 } from "lucide-react";
-import { MOCK_ORDERS } from "@/lib/mock-data";
 import { CATEGORY_META, CHANNEL_META } from "@/lib/taxonomy";
 import { CategoryChip, StatusChip, Tag } from "@/components/chips";
 import { RiskBadge } from "@/components/risk-badge";
@@ -27,8 +26,8 @@ import { formatMoney, formatDateTime } from "@/lib/format";
 import { api } from "@/lib/api";
 
 export const Route = createFileRoute("/orders/$orderId")({
-  loader: ({ params }) => {
-    const order = MOCK_ORDERS.find((o) => o.id === params.orderId || o.orderNo === params.orderId);
+  loader: async ({ params }) => {
+    const order = await api.getOrder(params.orderId);
     if (!order) throw notFound();
     return { order };
   },

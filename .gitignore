@@ -36,6 +36,7 @@ data/cache/
 **/data/models/*.pkl
 **/data/vectors/
 **/data/cache/
+**/data/incoming/
 
 # Logs
 logs/

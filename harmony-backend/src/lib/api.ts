@@ -9,11 +9,33 @@ import {
   MOCK_RULES, MOCK_MODELS, MOCK_AGENTS, MOCK_KBS, MOCK_POLICIES, MOCK_FEEDBACK,
 } from "./pipeline-mock";
 
-// To switch to real backend, set VITE_API_BASE_URL and replace the body of
-// each function with a real fetch() call.
+// To switch to the real backend, set VITE_API_BASE_URL.
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function queryString(params: Record<string, unknown> = {}) {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
+    qs.set(key, String(value));
+  });
+  const s = qs.toString();
+  return s ? `?${s}` : "";
+}
+
+async function fetchJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  const r = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`${r.status} ${text || r.statusText}`);
+  }
+  return r.json() as Promise<T>;
+}
 
 export interface OrderListParams {
   page?: number;
@@ -27,8 +49,7 @@ export interface OrderListParams {
 export const api = {
   async listOrders(params: OrderListParams = {}): Promise<{ items: AnomalyOrder[]; total: number }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/orders?${new URLSearchParams(params as Record<string, string>)}`);
-      return r.json();
+      return fetchJson(`/orders${queryString(params)}`);
     }
     await sleep(120);
     let items = MOCK_ORDERS;
@@ -51,10 +72,19 @@ export const api = {
     return { items: items.slice((page - 1) * pageSize, page * pageSize), total };
   },
 
+  async listAllOrders(params: Omit<OrderListParams, "page" | "pageSize"> = {}): Promise<AnomalyOrder[]> {
+    const { items } = await this.listOrders({ ...params, page: 1, pageSize: 5000 });
+    return items;
+  },
+
   async getOrder(id: string): Promise<AnomalyOrder | undefined> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/orders/${id}`);
-      return r.json();
+      try {
+        return await fetchJson(`/orders/${encodeURIComponent(id)}`);
+      } catch (e) {
+        if (e instanceof Error && e.message.startsWith("404")) return undefined;
+        throw e;
+      }
     }
     await sleep(80);
     return MOCK_ORDERS.find((o) => o.id === id || o.orderNo === id);
@@ -62,20 +92,26 @@ export const api = {
 
   async executeAction(orderId: string, action: string): Promise<{ ok: true; message: string }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/orders/${orderId}/actions`, {
+      return fetchJson(`/orders/${encodeURIComponent(orderId)}/actions`, {
         method: "POST",
         body: JSON.stringify({ action }),
       });
-      return r.json();
     }
     await sleep(420);
     return { ok: true, message: `已对订单 ${orderId} 执行动作: ${action}` };
   },
 
+  async analyzeOrder(orderId: string): Promise<{ ok: true; trace: unknown }> {
+    if (API_BASE) {
+      return fetchJson(`/orders/${encodeURIComponent(orderId)}/analyze`, { method: "POST" });
+    }
+    await sleep(1000);
+    return { ok: true, trace: { orderId, mode: "frontend-mock", stages: [] } };
+  },
+
   async listRecon(params: { status?: string; channel?: string; search?: string } = {}): Promise<ReconRecord[]> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/reconciliation?${new URLSearchParams(params as Record<string, string>)}`);
-      return r.json();
+      return fetchJson(`/reconciliation${queryString(params)}`);
     }
     await sleep(100);
     let items = MOCK_RECON;
@@ -88,10 +124,24 @@ export const api = {
     return items;
   },
 
+  async runReconMatch(): Promise<{ ok: true; total: number; matched: number; discrepancy: number; message: string }> {
+    if (API_BASE) {
+      return fetchJson("/reconciliation/match", { method: "POST" });
+    }
+    await sleep(900);
+    const matched = MOCK_RECON.filter((r) => r.status === "matched").length;
+    return {
+      ok: true,
+      total: MOCK_RECON.length,
+      matched,
+      discrepancy: MOCK_RECON.length - matched,
+      message: "前端 mock 对账完成",
+    };
+  },
+
   async chatComplete(messages: ChatMessage[]): Promise<string> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/agent/chat`, { method: "POST", body: JSON.stringify({ messages }) });
-      const data = await r.json();
+      const data = await fetchJson<{ content: string }>("/agent/chat", { method: "POST", body: JSON.stringify({ messages }) });
       return data.content as string;
     }
     // Local mock — a templated response
@@ -103,8 +153,7 @@ export const api = {
   // ============== 规则引擎 ==============
   async listRules(params: { category?: string; status?: string; search?: string } = {}): Promise<RiskRule[]> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/rules?${new URLSearchParams(params as Record<string, string>)}`);
-      return r.json();
+      return fetchJson(`/rules${queryString(params)}`);
     }
     await sleep(80);
     let items = MOCK_RULES;
@@ -118,16 +167,14 @@ export const api = {
   },
   async upsertRule(rule: Partial<RiskRule>): Promise<{ ok: true; id: string }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/rules`, { method: "POST", body: JSON.stringify(rule) });
-      return r.json();
+      return fetchJson("/rules", { method: "POST", body: JSON.stringify(rule) });
     }
     await sleep(300);
     return { ok: true, id: rule.id ?? `rule-${Date.now()}` };
   },
   async toggleRule(id: string, enabled: boolean): Promise<{ ok: true }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/rules/${id}/toggle`, { method: "POST", body: JSON.stringify({ enabled }) });
-      return r.json();
+      return fetchJson(`/rules/${encodeURIComponent(id)}/toggle`, { method: "POST", body: JSON.stringify({ enabled }) });
     }
     await sleep(180);
     return { ok: true };
@@ -136,24 +183,21 @@ export const api = {
   // ============== ML 模型 ==============
   async listModels(): Promise<MLModel[]> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/models`);
-      return r.json();
+      return fetchJson("/models");
     }
     await sleep(80);
     return MOCK_MODELS;
   },
   async updateModelConfig(id: string, patch: Partial<MLModel>): Promise<{ ok: true }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/models/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
-      return r.json();
+      return fetchJson(`/models/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(patch) });
     }
     await sleep(280);
     return { ok: true };
   },
   async retrainModel(id: string): Promise<{ ok: true; jobId: string }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/models/${id}/retrain`, { method: "POST" });
-      return r.json();
+      return fetchJson(`/models/${encodeURIComponent(id)}/retrain`, { method: "POST" });
     }
     await sleep(400);
     return { ok: true, jobId: `job-${Date.now()}` };
@@ -162,32 +206,28 @@ export const api = {
   // ============== AI Agent ==============
   async listAgents(): Promise<AgentConfig[]> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/agents`);
-      return r.json();
+      return fetchJson("/agents");
     }
     await sleep(80);
     return MOCK_AGENTS;
   },
   async listKnowledgeBases(): Promise<KnowledgeBase[]> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/agents/kb`);
-      return r.json();
+      return fetchJson("/agents/kb");
     }
     await sleep(80);
     return MOCK_KBS;
   },
   async updateAgent(id: string, patch: Partial<AgentConfig>): Promise<{ ok: true }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/agents/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
-      return r.json();
+      return fetchJson(`/agents/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(patch) });
     }
     await sleep(280);
     return { ok: true };
   },
   async testAgent(id: string, input: string): Promise<{ ok: true; output: string; tokens: number; latencyMs: number }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/agents/${id}/test`, { method: "POST", body: JSON.stringify({ input }) });
-      return r.json();
+      return fetchJson(`/agents/${encodeURIComponent(id)}/test`, { method: "POST", body: JSON.stringify({ input }) });
     }
     await sleep(900);
     return {
@@ -201,32 +241,28 @@ export const api = {
   // ============== 自动处置 + 反馈 ==============
   async listPolicies(): Promise<DispositionPolicy[]> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/policies`);
-      return r.json();
+      return fetchJson("/policies");
     }
     await sleep(80);
     return MOCK_POLICIES;
   },
   async upsertPolicy(p: Partial<DispositionPolicy>): Promise<{ ok: true; id: string }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/policies`, { method: "POST", body: JSON.stringify(p) });
-      return r.json();
+      return fetchJson("/policies", { method: "POST", body: JSON.stringify(p) });
     }
     await sleep(280);
     return { ok: true, id: p.id ?? `pol-${Date.now()}` };
   },
   async togglePolicy(id: string, enabled: boolean): Promise<{ ok: true }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/policies/${id}/toggle`, { method: "POST", body: JSON.stringify({ enabled }) });
-      return r.json();
+      return fetchJson(`/policies/${encodeURIComponent(id)}/toggle`, { method: "POST", body: JSON.stringify({ enabled }) });
     }
     await sleep(180);
     return { ok: true };
   },
   async listFeedback(params: { type?: string; reviewer?: string } = {}): Promise<FeedbackRecord[]> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/feedback?${new URLSearchParams(params as Record<string, string>)}`);
-      return r.json();
+      return fetchJson(`/feedback${queryString(params)}`);
     }
     await sleep(80);
     let items = MOCK_FEEDBACK;
@@ -235,8 +271,7 @@ export const api = {
   },
   async submitFeedback(fb: Partial<FeedbackRecord>): Promise<{ ok: true; id: string }> {
     if (API_BASE) {
-      const r = await fetch(`${API_BASE}/feedback`, { method: "POST", body: JSON.stringify(fb) });
-      return r.json();
+      return fetchJson("/feedback", { method: "POST", body: JSON.stringify(fb) });
     }
     await sleep(280);
     return { ok: true, id: `fb-${Date.now()}` };
