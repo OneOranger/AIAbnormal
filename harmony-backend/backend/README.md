@@ -207,3 +207,8 @@ STORAGE_DIR=./storage
 - `BACKEND_DESIGN_ALIGNMENT.md`：设计文档对齐情况、已实现内容、占位内容、结构说明。
 - `E2E_TESTING_GUIDE.md`：从新增测试数据到完整业务链路的端到端测试步骤。
 - `LOCAL_DATA_TESTING.md`：本地数据目录、JSONL 格式、演示/真实模式说明。
+
+清空
+cd E:\AIPG\AIAbnormal\harmony-backend\backend
+Remove-Item .\storage\runtime\*.jsonl -Force
+
